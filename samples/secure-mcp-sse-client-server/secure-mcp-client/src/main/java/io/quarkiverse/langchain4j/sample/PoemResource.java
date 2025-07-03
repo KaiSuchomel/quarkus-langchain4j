@@ -1,16 +1,13 @@
 package io.quarkiverse.langchain4j.sample;
 
-import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.service.UserMessage;
 import io.quarkiverse.langchain4j.RegisterAiService;
 import io.quarkiverse.langchain4j.mcp.runtime.McpToolBox;
 import io.quarkus.security.Authenticated;
 import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 
-@Path("/poem")
 @Authenticated
 public class PoemResource {
 
@@ -25,12 +22,29 @@ public class PoemResource {
         String writePoem();
     }
     
+    @RegisterAiService
+    public interface OnciteService {
+        @UserMessage("What is possible at Oncite")
+        @McpToolBox("oncite")
+        String chatWithOncite();
+    }
+    
     
     @Inject
     PoemService poemService;
 
     @GET
+    @Path("/poem")
     public String getPoem() {
         return poemService.writePoem();
+    }
+    
+    @Inject
+    OnciteService onciteService;
+    
+    @GET
+    @Path("/oncite")
+    public String getOncite() {
+        return onciteService.chatWithOncite();
     }
 }
