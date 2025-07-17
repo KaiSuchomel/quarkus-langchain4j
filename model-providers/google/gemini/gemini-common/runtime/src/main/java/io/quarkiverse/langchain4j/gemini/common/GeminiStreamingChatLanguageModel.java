@@ -10,8 +10,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
+import jakarta.enterprise.inject.spi.CDI;
+
+import org.eclipse.microprofile.context.ManagedExecutor;
 import org.jboss.resteasy.reactive.client.SseEvent;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
@@ -34,10 +38,18 @@ import io.smallrye.mutiny.Multi;
 
 public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatModel implements StreamingChatModel {
 
+    //    private final Vertx vertx;
+
     public GeminiStreamingChatLanguageModel(String modelId, Double temperature, Integer maxOutputTokens, Integer topK,
             Double topP, ResponseFormat responseFormat, List<ChatModelListener> listeners) {
         super(modelId, temperature, maxOutputTokens, topK, topP, responseFormat, listeners);
+        //        this.vertx = vertx();
     }
+
+    //    private static Vertx vertx() {
+    //        Instance<Vertx> vertxInstance = CDI.current().select(Vertx.class);
+    //        return vertxInstance.isResolvable() ? vertxInstance.get() : null;
+    //    }
 
     @Override
     public Set<Capability> supportedCapabilities() {
@@ -84,7 +96,13 @@ public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatMod
         try {
             GeminiStreamingResponseBuilder responseBuilder = new GeminiStreamingResponseBuilder();
             Multi<SseEvent<GenerateContentResponse>> event = generateStreamContext(request);
-            event.subscribe().with(
+            Executor executorService = createExecutor();
+            //            event.subscribe().with(
+            //                    new OnItemConsumer(responseBuilder, aHandler),
+            //                    new OnErrorConsumer(aHandler),
+            //                    new OnCompleteRunnable(responseBuilder, aHandler))
+            //                    ;
+            event.runSubscriptionOn(executorService).subscribe().with(
                     new OnItemConsumer(responseBuilder, aHandler),
                     new OnErrorConsumer(aHandler),
                     new OnCompleteRunnable(responseBuilder, aHandler));
@@ -105,6 +123,11 @@ public abstract class GeminiStreamingChatLanguageModel extends BaseGeminiChatMod
 
             throw e;
         }
+    }
+
+    private Executor createExecutor() {
+        ManagedExecutor executor = CDI.current().select(ManagedExecutor.class).get();
+        return executor;
     }
 
     protected abstract Multi<SseEvent<GenerateContentResponse>> generateStreamContext(GenerateContentRequest request);
