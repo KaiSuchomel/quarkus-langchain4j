@@ -1,5 +1,6 @@
 package io.quarkiverse.langchain4j.vertexai.runtime.gemini;
 
+import dev.langchain4j.model.ModelProvider;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
@@ -59,6 +60,11 @@ public class VertexAiGeminiStreamingChatLanguageModel extends GeminiStreamingCha
     @Override
     protected Multi<SseEvent<GenerateContentResponse>> generateStreamContext(GenerateContentRequest request) {
         return restApi.generateContentStream(request, apiMetadata, "sse");
+    }
+
+    @Override
+    public ModelProvider provider() {
+        return ModelProvider.GOOGLE_VERTEX_AI_GEMINI;
     }
 
     public static Builder builder() {

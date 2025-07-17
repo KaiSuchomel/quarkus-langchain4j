@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import org.jboss.resteasy.reactive.client.SseEvent;
 import org.jboss.resteasy.reactive.client.api.LoggingScope;
 
+import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.request.ResponseFormat;
 import io.quarkiverse.langchain4j.gemini.common.GeminiStreamingChatLanguageModel;
@@ -61,6 +62,11 @@ public class AiGeminiStreamingChatLanguageModel extends GeminiStreamingChatLangu
     @Override
     protected Multi<SseEvent<GenerateContentResponse>> generateStreamContext(GenerateContentRequest request) {
         return restApi.generateContentStream(request, apiMetadata, "sse");
+    }
+
+    @Override
+    public ModelProvider provider() {
+        return ModelProvider.GOOGLE_AI_GEMINI;
     }
 
     public static Builder builder() {
